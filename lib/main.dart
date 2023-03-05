@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/firebase_options.dart';
 import 'package:flutter_application_1/model.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +84,10 @@ class _MyhomePageState extends State<MyhomePage> {
     FirebaseFirestore.instance.collection('basket_items').add(item.toJson());
   }
 
+  deleteItem(String id) {
+    FirebaseFirestore.instance.collection('basket_items').doc(id).delete();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Future fetchData() async {
@@ -116,12 +121,13 @@ class _MyhomePageState extends State<MyhomePage> {
                               controller: quanController,
                             ),
                             ElevatedButton(
-                                onPressed: () {
-                                  addItem(nameController.text.trim(),
-                                      quanController.text.trim());
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('submit'))
+                              onPressed: () {
+                                addItem(nameController.text.trim(),
+                                    quanController.text.trim());
+                                Navigator.pop(context);
+                              },
+                              child: const Text('submit'),
+                            )
                           ],
                         ),
                       );
@@ -133,9 +139,29 @@ class _MyhomePageState extends State<MyhomePage> {
               child: ListView.builder(
                 itemCount: basketItems.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(basketItems[index].name),
-                    subtitle: Text(basketItems[index].quantity),
+                  return Slidable(
+                    key: const ValueKey(0),
+                    endActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      dismissible: DismissiblePane(onDismissed: () {
+                        print('object');
+                      }),
+                      children: [
+                        SlidableAction(
+                          onPressed: (context) {
+                            deleteItem(basketItems[index].id);
+                          },
+                          backgroundColor: Color(0xFFFE4A49),
+                          foregroundColor: Colors.white,
+                          icon: Icons.delete,
+                          label: 'Delete',
+                        ),
+                      ],
+                    ),
+                    child: ListTile(
+                      title: Text(basketItems[index].name),
+                      subtitle: Text(basketItems[index].quantity),
+                    ),
                   );
                 },
               ),
