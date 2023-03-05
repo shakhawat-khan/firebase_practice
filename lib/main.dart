@@ -51,6 +51,12 @@ class _MyhomePageState extends State<MyhomePage> {
   @override
   void initState() {
     // TODO: implement initState
+    FirebaseFirestore.instance
+        .collection('basket_items')
+        .snapshots()
+        .listen((records) {
+      mapRecords(records);
+    });
     fetchData();
     super.initState();
   }
@@ -72,6 +78,11 @@ class _MyhomePageState extends State<MyhomePage> {
     });
   }
 
+  addItem(String name, String quantity) {
+    var item = Item(id: 'id', name: name, quantity: quantity);
+    FirebaseFirestore.instance.collection('basket_items').add(item.toJson());
+  }
+
   @override
   Widget build(BuildContext context) {
     // Future fetchData() async {
@@ -83,16 +94,53 @@ class _MyhomePageState extends State<MyhomePage> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text('hello'),
+          title: const Text('hello'),
         ),
-        body: ListView.builder(
-          itemCount: basketItems.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(basketItems[index].name),
-              subtitle: Text(basketItems[index].quantity),
-            );
-          },
+        body: Column(
+          children: [
+            ElevatedButton(
+                onPressed: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (context) {
+                      var nameController = TextEditingController();
+                      var quanController = TextEditingController();
+                      return Dialog(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: nameController,
+                            ),
+                            TextField(
+                              controller: quanController,
+                            ),
+                            ElevatedButton(
+                                onPressed: () {
+                                  addItem(nameController.text.trim(),
+                                      quanController.text.trim());
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('submit'))
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: const Text('add new item')),
+            Expanded(
+              child: ListView.builder(
+                itemCount: basketItems.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(basketItems[index].name),
+                    subtitle: Text(basketItems[index].quantity),
+                  );
+                },
+              ),
+            ),
+          ],
         ));
   }
 }
