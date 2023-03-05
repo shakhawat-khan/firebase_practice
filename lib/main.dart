@@ -88,6 +88,15 @@ class _MyhomePageState extends State<MyhomePage> {
     FirebaseFirestore.instance.collection('basket_items').doc(id).delete();
   }
 
+  updateItem(String id, String name, String quantity) {
+    var item = Item(id: id, name: name, quantity: quantity);
+
+    FirebaseFirestore.instance
+        .collection('basket_items')
+        .doc(id)
+        .update(item.toJson());
+  }
+
   @override
   Widget build(BuildContext context) {
     // Future fetchData() async {
@@ -143,24 +152,58 @@ class _MyhomePageState extends State<MyhomePage> {
                     key: const ValueKey(0),
                     endActionPane: ActionPane(
                       motion: const ScrollMotion(),
-                      dismissible: DismissiblePane(onDismissed: () {
-                        print('object');
-                      }),
+                      dismissible: DismissiblePane(onDismissed: () {}),
                       children: [
                         SlidableAction(
                           onPressed: (context) {
                             deleteItem(basketItems[index].id);
                           },
-                          backgroundColor: Color(0xFFFE4A49),
+                          backgroundColor: const Color(0xFFFE4A49),
                           foregroundColor: Colors.white,
                           icon: Icons.delete,
                           label: 'Delete',
                         ),
                       ],
                     ),
-                    child: ListTile(
-                      title: Text(basketItems[index].name),
-                      subtitle: Text(basketItems[index].quantity),
+                    child: InkWell(
+                      onLongPress: () {
+                        var nameController = TextEditingController();
+                        var quanController = TextEditingController();
+
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return Dialog(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    controller: nameController,
+                                  ),
+                                  TextField(
+                                    controller: quanController,
+                                  ),
+                                  ElevatedButton(
+                                      onPressed: () {
+                                        updateItem(
+                                            basketItems[index].id,
+                                            nameController.text,
+                                            quanController.text);
+
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text('submit'))
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                        //updateItem();
+                      },
+                      child: ListTile(
+                        title: Text(basketItems[index].name),
+                        subtitle: Text(basketItems[index].quantity),
+                      ),
                     ),
                   );
                 },
