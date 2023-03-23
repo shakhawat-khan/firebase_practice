@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/auth.dart';
 import 'package:flutter_application_1/firebase_options.dart';
 import 'package:flutter_application_1/model.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -35,7 +37,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyhomePage(),
+      home: const Auth(),
     );
   }
 }
@@ -51,9 +53,9 @@ class _MyhomePageState extends State<MyhomePage> {
   List<Item> basketItems = [];
   @override
   void initState() {
-    // TODO: implement initState
     FirebaseFirestore.instance
         .collection('basket_items')
+        .where('quantity', isEqualTo: user!.uid)
         .snapshots()
         .listen((records) {
       mapRecords(records);
@@ -62,9 +64,17 @@ class _MyhomePageState extends State<MyhomePage> {
     super.initState();
   }
 
+  final user = FirebaseAuth.instance.currentUser;
+
   fetchData() async {
-    var records =
-        await FirebaseFirestore.instance.collection('basket_items').get();
+    // var records =
+    //     await FirebaseFirestore.instance.collection('basket_items').get();
+    // mapRecords(records);
+
+    var records = await FirebaseFirestore.instance
+        .collection('basket_items')
+        .where('quantity', isEqualTo: user!.uid)
+        .get();
     mapRecords(records);
   }
 
@@ -79,8 +89,8 @@ class _MyhomePageState extends State<MyhomePage> {
     });
   }
 
-  addItem(String name, String quantity) {
-    var item = Item(id: 'id', name: name, quantity: quantity);
+  addItem(String name, String quantity, String id) {
+    var item = Item(id: '', name: name, quantity: id);
     FirebaseFirestore.instance.collection('basket_items').add(item.toJson());
   }
 
@@ -105,6 +115,8 @@ class _MyhomePageState extends State<MyhomePage> {
 
     //   print(records.docs.length);
     // }
+
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
         appBar: AppBar(
@@ -131,8 +143,10 @@ class _MyhomePageState extends State<MyhomePage> {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                addItem(nameController.text.trim(),
-                                    quanController.text.trim());
+                                addItem(
+                                    nameController.text.trim(),
+                                    quanController.text.trim(),
+                                    user!.uid.toString());
                                 Navigator.pop(context);
                               },
                               child: const Text('submit'),
@@ -192,7 +206,7 @@ class _MyhomePageState extends State<MyhomePage> {
 
                                         Navigator.pop(context);
                                       },
-                                      child: Text('submit'))
+                                      child: const Text('submit'))
                                 ],
                               ),
                             );
